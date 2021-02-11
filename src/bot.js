@@ -46,8 +46,9 @@ client.on('message', (message) => {
                 console.log("Shutting down DST server...");
                 message.channel.send("Shutting down DST server...");
                 // use child process to run .exe
-                runDSTServerCommand("master", "c_shutdown()");
                 runDSTServerCommand("caves", "c_shutdown()");
+                // shut master down after small delay
+                setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, 1000);
             }
 
             // general command
@@ -79,7 +80,9 @@ client.login(process.env.DISCORDJS_BOT_TOKEN);
 function runDSTServerCommand(shard, command) {
     // use child process to run .exe
     exec(AHK_SCRIPT, [shard, command], function(err, data) {
-        console.log(err);
-        console.log(data.toString());                       
+        if (err) {
+            console.log("Error:" + err);
+        }
+        console.log("Data:" + data.toString());                       
     });
 }
