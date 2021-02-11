@@ -142,23 +142,20 @@ function setupLogTails(message) {
     masterTail.on("line", function(data) {
         console.log(data);
         if (data.includes(SERVER_ONLINE_STRING)) {
+            if (serverStartingUp) {
+                console.log("Server is now online.");
+                message.channel.send("Server is now online.");
+            }
             serverStartingUp = false;
-            console.log("Server is now online.");
-            message.channel.send("Server is now online.");
         }
         if (data.includes(SERVER_OFFLINE_STRING)) {
+            if (serverShuttingDown) {
+                console.log("Server is now offline.");
+                message.channel.send("Server is now offline.");
+            }
             serverShuttingDown = false;
-            console.log("Server is now offline.");
-            message.channel.send("Server is now offline.");
-            unwatchTails();
         }
     });
-}
-
-function unwatchTails() {
-    masterTail.unwatch();
-    cavesTail.unwatch();
-    chatTail.unwatch();
 }
 
 async function isDSTServerOnline() {
