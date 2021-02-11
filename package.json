@@ -1,0 +1,24 @@
+{
+  "name": "dst-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot to help manage and announce events from a DST (don't starve together) server.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krthush/dst-discord-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/krthush/dst-discord-bot/issues"
+  },
+  "homepage": "https://github.com/krthush/dst-discord-bot#readme",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0"
+  }
+}
