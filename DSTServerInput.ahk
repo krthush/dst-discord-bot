@@ -1,4 +1,6 @@
-﻿if A_Args.length() = 2
+﻿SetTitleMatchMode, 2
+
+if A_Args.length() = 2
 {
 	if A_Args[1] = "master"
 	{
