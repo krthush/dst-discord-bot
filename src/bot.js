@@ -64,6 +64,7 @@ client.on('message', (message) => {
                                 console.log(data.toString());                       
                             });
                             setupLogTails(message);
+                            serverStartingUp = false;
                         } else {
                             message.channel.send("Attempting server startup already.");
                         }
@@ -85,6 +86,7 @@ client.on('message', (message) => {
                             runDSTServerCommand("caves", "c_shutdown()");
                             // shut master down after small delay
                             setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
+                            serverShuttingDown = false;
                         } else {
                             message.channel.send("Attempting server shutdown already.");
                         }
