@@ -12,9 +12,13 @@ const client = new Client();
 const PREFIX = process.env.COMMAND_PREFIX;
 const ADMIN_ROLE = process.env.ADMIN_ROLE;
 const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
+const MASTER_SERVER_LOG = process.env.MASTER_SERVER_LOG;
+const CAVES_SERVER_LOG = process.env.CAVES_SERVER_LOG;
+const CHAT_SERVER_LOG = process.env.CHAT_SERVER_LOG;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
-const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe'
+const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
+const SERVER_ACTION_DELAY = 1000;
 
 // vars
 var serverStartup = false;
@@ -25,21 +29,6 @@ client.on('ready', () => {
     console.log(`${client.user.username} has logged in.`);
     const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
     mainChannel.send("I'm awake and ready to not starve!");
-
-    tail = new Tail("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt");
-
-    tail.on("line", function(data) {
-        console.log(data);
-    });
-
-    // const rl = readline.createInterface({
-    //     input: fs.createReadStream("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt"),
-    //     crlfDelay: Infinity
-    // });
-
-    // rl.on('line', (line) => {
-    //     console.log(`Line from file: ${line}`);
-    // });
 
 });
 
@@ -72,6 +61,7 @@ client.on('message', (message) => {
                                 console.log(err)
                                 console.log(data.toString());                       
                             });
+                            setupLogTails();
                             serverStartup = false; // MOVE
                         } else {
                             message.channel.send("Attempting server startup already.");
@@ -93,7 +83,7 @@ client.on('message', (message) => {
                             // use child process to run .exe
                             runDSTServerCommand("caves", "c_shutdown()");
                             // shut master down after small delay
-                            setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, 1000);
+                            setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
                             serverShutdown = false; // MOVE
                         } else {
                             message.channel.send("Attempting server shutdown already.");
@@ -141,6 +131,13 @@ function runDSTServerCommand(shard, command) {
         if (err) {
             console.log("Error:" + err);
         }                      
+    });
+}
+
+function setupLogTails() {
+    masterTail = new Tail(MASTER_SERVER_LOG);
+    masterTail.on("line", function(data) {
+        console.log(data);
     });
 }
 
