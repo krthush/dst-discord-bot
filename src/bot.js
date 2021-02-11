@@ -135,6 +135,7 @@ function runDSTServerCommand(shard, command) {
 }
 
 function setupLogTails() {
+    console.log("Tails added.");
     masterTail = new Tail(MASTER_SERVER_LOG);
     masterTail.on("line", function(data) {
         console.log(data);
@@ -142,14 +143,16 @@ function setupLogTails() {
 }
 
 async function isDSTServerOnline() {
-    console.log("Checking if server online");
+    console.log("Checking if server online.");
     const filterString = `Imagename eq ${DST_SERVER_TASK_NAME}`;
     const tasks = await tasklist({
         filter: [filterString]
     });
     if (tasks.length > 0) {
+        console.log("Server online.");
         return true;
     } else {
+        console.log("Server offline.");
         return false;
     }
 }
