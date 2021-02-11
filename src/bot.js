@@ -9,9 +9,12 @@ const PREFIX = process.env.COMMAND_PREFIX;
 const ADMIN_ROLE = process.env.ADMIN_ROLE;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
+const CHANNEL_ID = process.env.CHANNEL_ID;
 
 client.on('ready', () => {
     console.log(`${client.user.username} has logged in.`)
+    const channel = client.channels.cache.find(channel => channel.id === CHANNEL_ID)
+    channel.send("I'm awake and ready to not starve!")
 });
 
 client.on('message', (message) => {
