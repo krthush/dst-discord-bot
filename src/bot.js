@@ -142,6 +142,7 @@ function setupLogTails() {
 }
 
 async function isDSTServerOnline() {
+    console.log("Checking if server online");
     const filterString = `Imagename eq ${DST_SERVER_TASK_NAME}`;
     const tasks = await tasklist({
         filter: [filterString]
