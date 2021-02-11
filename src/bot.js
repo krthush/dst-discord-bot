@@ -19,10 +19,12 @@ const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
 const SERVER_ACTION_DELAY = 1000;
+const SERVER_ONLINE_STRING = "Registering master server";
+const SERVER_OFFLINE_STRING = "Shutting down";
 
 // vars
-var serverStartup = false;
-var serverShutdown = false;
+var serverStartingUp = false;
+var serverShuttingDown = false;
 
 client.on('ready', () => {
 
@@ -52,8 +54,8 @@ client.on('message', (message) => {
             if (command === "startup") {
                 isDSTServerOnline().then((serverOnline) => {
                     if (!serverOnline) {
-                        if (!serverStartup) {
-                            serverStartup = true;
+                        if (!serverStartingUp) {
+                            serverStartingUp = true;
                             console.log("Starting up DST server...");
                             message.channel.send("Starting up DST server...");
                             // use child process to run .bat
@@ -61,8 +63,7 @@ client.on('message', (message) => {
                                 console.log(err)
                                 console.log(data.toString());                       
                             });
-                            setupLogTails();
-                            serverStartup = false; // MOVE
+                            setupLogTails(message);
                         } else {
                             message.channel.send("Attempting server startup already.");
                         }
@@ -76,15 +77,14 @@ client.on('message', (message) => {
             if (command === "shutdown") {
                 isDSTServerOnline().then((serverOnline) => {
                     if (serverOnline) {
-                        if (!serverShutdown) {
-                            serverShutdown = true;
+                        if (!serverShuttingDown) {
+                            serverShuttingDown = true;
                             console.log("Shutting down DST server...");
                             message.channel.send("Shutting down DST server...");
                             // use child process to run .exe
                             runDSTServerCommand("caves", "c_shutdown()");
                             // shut master down after small delay
                             setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
-                            serverShutdown = false; // MOVE
                         } else {
                             message.channel.send("Attempting server shutdown already.");
                         }
@@ -134,11 +134,24 @@ function runDSTServerCommand(shard, command) {
     });
 }
 
-function setupLogTails() {
+function setupLogTails(message) {
     console.log("Tails added.");
     masterTail = new Tail(MASTER_SERVER_LOG);
+    cavesTail = new Tail(CAVES_SERVER_LOG);
+    chatTail = new Tail(CHAT_SERVER_LOG);
     masterTail.on("line", function(data) {
-        console.log(data);
+        if (data.includes(SERVER_ONLINE_STRING)) {
+            console.log(data);
+            serverStartingUp = false;
+            console.log("Server is now online.");
+            message.channel.send("Server is now online.");
+        }
+        if (data.includes(SERVER_OFFLINE_STRING)) {
+            console.log(data);
+            serverShuttingDown = false;
+            console.log("Server is now offline.");
+            message.channel.send("Server is now offline.");
+        }
     });
 }
 
