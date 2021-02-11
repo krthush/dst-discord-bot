@@ -143,22 +143,29 @@ function setupLogTails(message) {
         if (data.includes(SERVER_ONLINE_STRING)) {
             console.log(data);
             if (serverStartingUp) {
+                serverStartingUp = false;
                 console.log("Server is now online.");
                 message.channel.send("Server is now online.");
             }
-            serverStartingUp = false;
         }
         if (data.includes(SERVER_OFFLINE_STRING)) {
             console.log(data);
             if (serverShuttingDown) {
+                serverShuttingDown = false;
                 console.log("Server is now offline.");
                 message.channel.send("Server is now offline.");
             }
-            serverShuttingDown = false;
         }
     });
     chatTail.on("line", function(data) {
         console.log(data);
+        // clean string
+        var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
+        stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
+        stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
+        // send message through bot
+        console.log(stringEdit);
+        mainChannel.send(stringEdit);
     });
 }
 
