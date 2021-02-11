@@ -11,10 +11,14 @@ const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
 
+// vars
+var serverBooting = false;
+var serverRunning = false;
+
 client.on('ready', () => {
-    console.log(`${client.user.username} has logged in.`)
-    const MAIN_CHANNEL = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID)
-    MAIN_CHANNEL.send("I'm awake and ready to not starve!")
+    console.log(`${client.user.username} has logged in.`);
+    const MAIN_CHANNEL = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
+    // MAIN_CHANNEL.send("I'm awake and ready to not starve!");
 });
 
 client.on('message', (message) => {
@@ -35,41 +39,61 @@ client.on('message', (message) => {
 
             // startup command
             if (command === "startup") {
-                console.log("Starting up DST server...");
-                message.channel.send("Starting up DST server...");
-                // use child process to run .bat
-                exec(STARTUP_SCRIPT, function(err, data) {  
-                    console.log(err)
-                    console.log(data.toString());                       
-                });
+                if (!serverRunning) {
+                    if (!serverBooting) {
+                        serverBooting = true;
+                        console.log("Starting up DST server...");
+                        message.channel.send("Starting up DST server...");
+                        // use child process to run .bat
+                        exec(STARTUP_SCRIPT, function(err, data) {  
+                            console.log(err)
+                            console.log(data.toString());                       
+                        });
+                        serverRunning = true;
+                        serverBooting = false;
+                    } else {
+                        message.channel.send("Attempting server startup already.");
+                    }
+                } else {
+                    message.channel.send("Server already running.");
+                }
             }
 
             // shutdown command
             if (command === "shutdown") {
-                console.log("Shutting down DST server...");
-                message.channel.send("Shutting down DST server...");
-                // use child process to run .exe
-                runDSTServerCommand("caves", "c_shutdown()");
-                // shut master down after small delay
-                setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, 1000);
+                if (serverRunning) {
+                    console.log("Shutting down DST server...");
+                    message.channel.send("Shutting down DST server...");
+                    // use child process to run .exe
+                    runDSTServerCommand("caves", "c_shutdown()");
+                    // shut master down after small delay
+                    setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, 1000);
+                    serverRunning = false;
+                } else {
+                    message.channel.send("Attempting server shutdown already.");
+                }
             }
 
             // general command
             if (command === "general") {
-                console.log("Running general command.");
-                message.channel.send("Running general command. I hope you know what you're doing.");
-                if (args[0]=="master") {
-                    args.shift();
-                    // clean string for cmd line parameters
-                    const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
-                    runDSTServerCommand("master", DST_CMD);
-                } else if (args[0]=="caves") {
-                    args.shift();
-                    // clean string for cmd line parameters
-                    const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
-                    runDSTServerCommand("caves", DST_CMD);
+                if (serverRunning) {
+                    console.log("Running general command.");
+                    message.channel.send("Running general command. I hope you know what you're doing.");
+                    if (args[0]=="master") {
+                        args.shift();
+                        // clean string for cmd line parameters
+                        const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
+                        runDSTServerCommand("master", DST_CMD);
+                    } else if (args[0]=="caves") {
+                        args.shift();
+                        // clean string for cmd line parameters
+                        const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
+                        runDSTServerCommand("caves", DST_CMD);
+                    } else {
+                        message.channel.send("Please specific shard (master/caves) in first parameter");
+                    }
                 } else {
-                    message.channel.send("Please specific shard (master/caves) in first parameter");
+                    message.channel.send("Server offline.");
                 }
             }
 
