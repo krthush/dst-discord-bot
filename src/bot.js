@@ -1,24 +1,31 @@
-require('dotenv').config();
+require('dotenv').config(); // manage env vars
 
 var exec = require('child_process').execFile;
 
 // constants
-const { Client } = require('discord.js');
+const { Client } = require('discord.js'); // discord api
+const chokidar = require('chokidar'); // watching library for file changes
 const client = new Client();
 const PREFIX = process.env.COMMAND_PREFIX;
 const ADMIN_ROLE = process.env.ADMIN_ROLE;
+const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
-const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
 
 // vars
 var serverBooting = false;
 var serverRunning = false;
 
 client.on('ready', () => {
+
     console.log(`${client.user.username} has logged in.`);
-    const MAIN_CHANNEL = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
-    // MAIN_CHANNEL.send("I'm awake and ready to not starve!");
+    const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
+    // mainChannel.send("I'm awake and ready to not starve!");
+
+    // check if log file changed
+    chokidar.watch('server_log.txt').on('all', (event, path) => {
+        console.log(event, path);
+    });
 });
 
 client.on('message', (message) => {
@@ -82,13 +89,13 @@ client.on('message', (message) => {
                     if (args[0]=="master") {
                         args.shift();
                         // clean string for cmd line parameters
-                        const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
-                        runDSTServerCommand("master", DST_CMD);
+                        const dstCMD = args.join(' ').replace(/["]{2,}/g,'');
+                        runDSTServerCommand("master", dstCMD);
                     } else if (args[0]=="caves") {
                         args.shift();
                         // clean string for cmd line parameters
-                        const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
-                        runDSTServerCommand("caves", DST_CMD);
+                        const dstCMD = args.join(' ').replace(/["]{2,}/g,'');
+                        runDSTServerCommand("caves", dstCMD);
                     } else {
                         message.channel.send("Please specific shard (master/caves) in first parameter");
                     }
