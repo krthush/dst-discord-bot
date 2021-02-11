@@ -79,7 +79,7 @@ client.on('message', (message) => {
                     } else {
                         message.channel.send("Server already online.");
                     }
-                }
+                });
             }
 
             // shutdown command
@@ -126,7 +126,7 @@ client.on('message', (message) => {
                     } else {
                         message.channel.send("The server is shutdown.");
                     }
-                }
+                });
             }
 
         }
