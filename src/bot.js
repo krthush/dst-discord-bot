@@ -140,8 +140,8 @@ function setupLogTails(message) {
     var cavesTail = new Tail(CAVES_SERVER_LOG, {useWatchFile: true});
     var chatTail = new Tail(CHAT_SERVER_LOG, {useWatchFile: true});
     masterTail.on("line", function(data) {
-        console.log(data);
         if (data.includes(SERVER_ONLINE_STRING)) {
+            console.log(data);
             if (serverStartingUp) {
                 console.log("Server is now online.");
                 message.channel.send("Server is now online.");
@@ -149,12 +149,16 @@ function setupLogTails(message) {
             serverStartingUp = false;
         }
         if (data.includes(SERVER_OFFLINE_STRING)) {
+            console.log(data);
             if (serverShuttingDown) {
                 console.log("Server is now offline.");
                 message.channel.send("Server is now offline.");
             }
             serverShuttingDown = false;
         }
+    });
+    chatTail.on("line", function(data) {
+        console.log(data);
     });
 }
 
