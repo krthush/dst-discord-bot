@@ -327,3 +327,4 @@ Process Memory:
 [00:14:07]: CurlRequestManager::ClientThread::Main() complete
 [00:14:07]: HttpClient2 discarded 0 callbacks.
 [00:14:07]: Shutting down
+[00:14:07]: HttpClient2 discarded 0 callbacks.

@@ -5,12 +5,16 @@ var exec = require('child_process').execFile;
 // constants
 const { Client } = require('discord.js'); // discord api
 const chokidar = require('chokidar'); // watching library for file changes
+Tail = require('tail').Tail;
+const fs = require('fs');
+const readline = require('readline');
 const client = new Client();
 const PREFIX = process.env.COMMAND_PREFIX;
 const ADMIN_ROLE = process.env.ADMIN_ROLE;
 const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
+
 
 // vars
 var serverBooting = false;
@@ -22,10 +26,25 @@ client.on('ready', () => {
     const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
     // mainChannel.send("I'm awake and ready to not starve!");
 
-    // check if log file changed
-    chokidar.watch('server_log.txt').on('all', (event, path) => {
-        console.log(event, path);
+    tail = new Tail('server_log.txt');
+
+    tail.on("line", function(data) {
+        console.log(data);
     });
+
+    // const rl = readline.createInterface({
+    //     input: fs.createReadStream('server_log.txt'),
+    //     crlfDelay: Infinity
+    // });
+
+    // // check if log file changed
+    // chokidar.watch('server_log.txt').on('all', (event, path) => {
+    //     console.log(event, path);
+    //     rl.on('line', (line) => {
+    //       console.log(`Line from file: ${line}`);
+    //     });
+    // });
+
 });
 
 client.on('message', (message) => {
