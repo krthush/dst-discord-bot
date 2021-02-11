@@ -8,7 +8,6 @@
 			return
 		SendInput % A_Args[2]
 		Send {Enter}
-		MsgBox % A_Args[2]
 	}
 	if A_Args[1] = "caves"
 	{
