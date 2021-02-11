@@ -136,9 +136,9 @@ function runDSTServerCommand(shard, command) {
 
 function setupLogTails(message) {
     console.log("Tails added.");
-    masterTail = new Tail(MASTER_SERVER_LOG);
-    cavesTail = new Tail(CAVES_SERVER_LOG);
-    chatTail = new Tail(CHAT_SERVER_LOG);
+    var masterTail = new Tail(MASTER_SERVER_LOG);
+    var cavesTail = new Tail(CAVES_SERVER_LOG);
+    var chatTail = new Tail(CHAT_SERVER_LOG);
     masterTail.on("line", function(data) {
         if (data.includes(SERVER_ONLINE_STRING)) {
             console.log(data);
@@ -151,8 +151,15 @@ function setupLogTails(message) {
             serverShuttingDown = false;
             console.log("Server is now offline.");
             message.channel.send("Server is now offline.");
+            unwatchTails();
         }
     });
+}
+
+function unwatchTails() {
+    masterTail.unwatch();
+    cavesTail.unwatch();
+    chatTail.unwatch();
 }
 
 async function isDSTServerOnline() {
