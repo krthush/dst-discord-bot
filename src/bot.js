@@ -5,9 +5,9 @@ var exec = require('child_process').execFile;
 // constants
 const { Client } = require('discord.js'); // discord api
 const chokidar = require('chokidar'); // watching library for file changes
-Tail = require('tail').Tail;
 const fs = require('fs');
 const readline = require('readline');
+Tail = require('tail').Tail;
 const client = new Client();
 const PREFIX = process.env.COMMAND_PREFIX;
 const ADMIN_ROLE = process.env.ADMIN_ROLE;
@@ -26,23 +26,32 @@ client.on('ready', () => {
     const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
     // mainChannel.send("I'm awake and ready to not starve!");
 
-    tail = new Tail('server_log.txt');
-
+    tail = new Tail("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt");
+    
     tail.on("line", function(data) {
         console.log(data);
     });
 
     // const rl = readline.createInterface({
-    //     input: fs.createReadStream('server_log.txt'),
+    //     input: fs.createReadStream("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt"),
     //     crlfDelay: Infinity
     // });
 
-    // // check if log file changed
-    // chokidar.watch('server_log.txt').on('all', (event, path) => {
-    //     console.log(event, path);
-    //     rl.on('line', (line) => {
-    //       console.log(`Line from file: ${line}`);
-    //     });
+    // check if log file changed
+    chokidar.watch("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt", {
+        usePolling: true
+    }).on('all', (event, path) => {
+        console.log(event, path);
+    });
+
+    // check if log file changed
+    // fs.watchFile("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt", (curr, prev) => {
+    //     console.log("file change");
+    // });
+
+    // check if log file changed
+    // fs.watch("C:/Users/krthu/Documents/Klei/DoNotStarveTogether/MyDediServer/Master/server_log.txt", (event, filename) => {
+    //     console.log(event, filename);
     // });
 
 });
