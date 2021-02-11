@@ -165,6 +165,7 @@ function setupLogTails(message) {
         stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
         // send message through bot
         console.log(stringEdit);
+        const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
         mainChannel.send(stringEdit);
     });
 }
