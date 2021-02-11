@@ -64,7 +64,6 @@ client.on('message', (message) => {
                                 console.log(data.toString());                       
                             });
                             setupLogTails(message);
-                            serverStartingUp = false;
                         } else {
                             message.channel.send("Attempting server startup already.");
                         }
@@ -86,7 +85,6 @@ client.on('message', (message) => {
                             runDSTServerCommand("caves", "c_shutdown()");
                             // shut master down after small delay
                             setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
-                            serverShuttingDown = false;
                         } else {
                             message.channel.send("Attempting server shutdown already.");
                         }
@@ -137,31 +135,30 @@ function runDSTServerCommand(shard, command) {
 }
 
 function setupLogTails(message) {
-    // console.log("Tails added.");
-    // var masterTail = new Tail(MASTER_SERVER_LOG);
-    // var cavesTail = new Tail(CAVES_SERVER_LOG);
-    // var chatTail = new Tail(CHAT_SERVER_LOG);
-    // masterTail.on("line", function(data) {
-    //     if (data.includes(SERVER_ONLINE_STRING)) {
-    //         console.log(data);
-    //         serverStartingUp = false;
-    //         console.log("Server is now online.");
-    //         message.channel.send("Server is now online.");
-    //     }
-    //     if (data.includes(SERVER_OFFLINE_STRING)) {
-    //         console.log(data);
-    //         serverShuttingDown = false;
-    //         console.log("Server is now offline.");
-    //         message.channel.send("Server is now offline.");
-    //         unwatchTails();
-    //     }
-    // });
+    console.log("Tails added.");
+    var masterTail = new Tail(MASTER_SERVER_LOG, {useWatchFile: true});
+    var cavesTail = new Tail(CAVES_SERVER_LOG, {useWatchFile: true});
+    var chatTail = new Tail(CHAT_SERVER_LOG, {useWatchFile: true});
+    masterTail.on("line", function(data) {
+        console.log(data);
+        if (data.includes(SERVER_ONLINE_STRING)) {
+            serverStartingUp = false;
+            console.log("Server is now online.");
+            message.channel.send("Server is now online.");
+        }
+        if (data.includes(SERVER_OFFLINE_STRING)) {
+            serverShuttingDown = false;
+            console.log("Server is now offline.");
+            message.channel.send("Server is now offline.");
+            unwatchTails();
+        }
+    });
 }
 
 function unwatchTails() {
-    // masterTail.unwatch();
-    // cavesTail.unwatch();
-    // chatTail.unwatch();
+    masterTail.unwatch();
+    cavesTail.unwatch();
+    chatTail.unwatch();
 }
 
 async function isDSTServerOnline() {
