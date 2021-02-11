@@ -59,7 +59,6 @@ client.on('message', (message) => {
                     args.shift();
                     // clean string for cmd line parameters
                     const DST_CMD = args.join(' ').replace(/["]{2,}/g,'');
-                    console.log(DST_CMD);
                     runDSTServerCommand("master", DST_CMD);
                 } else if (args[0]=="caves") {
                     args.shift();
@@ -82,7 +81,6 @@ function runDSTServerCommand(shard, command) {
     exec(AHK_SCRIPT, [shard, command], function(err, data) {
         if (err) {
             console.log("Error:" + err);
-        }
-        console.log("Data:" + data.toString());                       
+        }                      
     });
 }
