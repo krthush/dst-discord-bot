@@ -5,8 +5,6 @@ var exec = require('child_process').execFile;
 // constants
 const { Client } = require('discord.js'); // discord api
 const fs = require('fs');
-const readline = require('readline');
-const tasklist = require('tasklist');
 Tail = require('tail').Tail;
 const client = new Client();
 const PREFIX = process.env.COMMAND_PREFIX;
@@ -59,9 +57,8 @@ client.on('message', (message) => {
                             console.log("Starting up DST server...");
                             message.channel.send("Starting up DST server...");
                             // use child process to run .bat
-                            exec(STARTUP_SCRIPT, function(err, data) {  
-                                console.log(err)
-                                console.log(data.toString());                       
+                            exec(STARTUP_SCRIPT, function(err, data) {
+                                if (err) console.log(err);
                             });
                             setupLogTails(message);
                         } else {
@@ -170,16 +167,18 @@ function setupLogTails(message) {
 }
 
 async function isDSTServerOnline() {
-    console.log("Checking if server online.");
-    const filterString = `Imagename eq ${DST_SERVER_TASK_NAME}`;
-    const tasks = await tasklist({
-        filter: [filterString]
+    var online = false;
+    await exec(`tasklist /fi "Imagename eq ${DST_SERVER_TASK_NAME}" /fo table /nh`, function(err, stdout, stderr) {
+        var lines = stdout.split('\n')
+        lines.shift();
+        for (i=0; i<lines.length; i++) {
+            if (lines[i].includes(DST_SERVER_TASK_NAME)) {
+                console.log(lines[i]);
+                online = true;
+                break;
+            }
+        }
+        console.log(online);
     });
-    if (tasks.length > 0) {
-        console.log("Server online.");
-        return true;
-    } else {
-        console.log("Server offline.");
-        return false;
-    }
+    return online;
 }
