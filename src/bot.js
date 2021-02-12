@@ -1,10 +1,11 @@
 require('dotenv').config(); // manage env vars
 
-var exec = require('child_process').execFile;
-
 // constants
 const { Client } = require('discord.js'); // discord api
 const fs = require('fs');
+const util = require('util');
+const exec_file = require('child_process').execFile;
+const exec_promise = util.promisify(require('child_process').exec);
 Tail = require('tail').Tail;
 const client = new Client();
 const PREFIX = process.env.COMMAND_PREFIX;
@@ -24,11 +25,16 @@ const SERVER_OFFLINE_STRING = "Shutting down";
 var serverStartingUp = false;
 var serverShuttingDown = false;
 
+// bot/dst servers only work for windows
+if (process.platform !== 'win32') {
+    throw new Error('Windows only');
+}
+
 client.on('ready', () => {
 
     console.log(`${client.user.username} has logged in.`);
     const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
-    mainChannel.send("I'm awake and ready to not starve!");
+    // mainChannel.send("I'm awake and ready to not starve!");
 
 });
 
@@ -57,7 +63,7 @@ client.on('message', (message) => {
                             console.log("Starting up DST server...");
                             message.channel.send("Starting up DST server...");
                             // use child process to run .bat
-                            exec(STARTUP_SCRIPT, function(err, data) {
+                            exec_file(STARTUP_SCRIPT, function(err, data) {
                                 if (err) console.log(err);
                             });
                             setupLogTails(message);
@@ -124,10 +130,8 @@ client.login(process.env.DISCORDJS_BOT_TOKEN);
 
 function runDSTServerCommand(shard, command) {
     // use child process to run .exe
-    exec(AHK_SCRIPT, [shard, command], function(err, data) {
-        if (err) {
-            console.log("Error:" + err);
-        }                      
+    exec_file(AHK_SCRIPT, [shard, command], function(err, data) {
+        if (err) console.log(err);
     });
 }
 
@@ -168,18 +172,14 @@ function setupLogTails(message) {
 }
 
 async function isDSTServerOnline() {
-    var online = false;
-    await exec(`tasklist /fi "Imagename eq ${DST_SERVER_TASK_NAME}" /fo table /nh`, function(err, stdout, stderr) {
-        var lines = stdout.split('\n')
-        lines.shift();
-        for (i=0; i<lines.length; i++) {
-            if (lines[i].includes(DST_SERVER_TASK_NAME)) {
-                console.log(lines[i]);
-                online = true;
-                break;
-            }
-        }
-        console.log(online);
-    });
-    return online;
+    console.log("Checking tasklist for DST server.");
+    const { err, stdout } = await exec_promise(`tasklist /fi "Imagename eq ${DST_SERVER_TASK_NAME}" /fo csv /nh`, { shell: 'cmd.exe' });
+    if (err) console.log(err);
+    if (stdout.includes(DST_SERVER_TASK_NAME)) {
+        console.log("DST server program found running.");
+        return true;
+    } else {
+        console.log("DST server program not found running.");
+        return false;
+    }
 }
