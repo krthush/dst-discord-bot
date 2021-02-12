@@ -20,7 +20,6 @@ const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
 const MASTER_SERVER_LOG = process.env.MASTER_SERVER_LOG;
 const CAVES_SERVER_LOG = process.env.CAVES_SERVER_LOG;
 const CHAT_SERVER_LOG = process.env.CHAT_SERVER_LOG;
-const GENERAL_COMMAND_CHAT_OUPUT_LENGTH = process.env.GENERAL_COMMAND_CHAT_OUPUT_LENGTH;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
@@ -31,6 +30,7 @@ const SERVER_OFFLINE_STRING = "Shutting down";
 // vars
 var serverStartingUp = false;
 var serverShuttingDown = false;
+var logOutputCounter = 0;
 
 client.on('ready', () => {
 
@@ -103,20 +103,29 @@ client.on('message', (message) => {
             if (command === "general") {
                 isDSTServerOnline().then((serverOnline) => {
                     if (serverOnline) {
-                        console.log("Running general command.");
-                        message.channel.send("Running general command. I hope you know what you're doing.");
-                        if (args[0]=="master") {
-                            args.shift();
-                            // clean string for cmd line parameters
-                            const dstCMD = args.join(' ').replace(/["]{2,}/g,'');
-                            runDSTServerCommand("master", dstCMD);
-                        } else if (args[0]=="caves") {
-                            args.shift();
-                            // clean string for cmd line parameters
-                            const dstCMD = args.join(' ').replace(/["]{2,}/g,'');
-                            runDSTServerCommand("caves", dstCMD);
+                        if (isNaN(args[0])) {
+                            message.channel.send("Please specify number of output log lines (0 for none) in first parameter");
                         } else {
-                            message.channel.send("Please specific shard (master/caves) in first parameter");
+                            logOutputCounter = args[0];
+                            if (args[1]=="master") {
+                                args.shift();
+                                args.shift();
+                                // clean string for cmd line parameters
+                                const dstCMD = args.join(' ').replace(/["]{2,}/g,'');
+                                console.log("Running general command.");
+                                message.channel.send("Running general command. I hope you know what you're doing.");
+                                runDSTServerCommand("master", dstCMD);
+                            } else if (args[1]=="caves") {
+                                args.shift();
+                                args.shift();
+                                // clean string for cmd line parameters
+                                const dstCMD = args.join(' ').replace(/["]{2,}/g,'');
+                                console.log("Running general command.");
+                                message.channel.send("Running general command. I hope you know what you're doing.");
+                                runDSTServerCommand("caves", dstCMD);
+                            } else {
+                                message.channel.send("Please specify shard (master/caves) in second parameter");
+                            }
                         }
                     } else {
                         message.channel.send("The server is shutdown.");
@@ -143,6 +152,11 @@ function setupLogTails(message) {
     var cavesTail = new Tail(CAVES_SERVER_LOG, {useWatchFile: true});
     var chatTail = new Tail(CHAT_SERVER_LOG, {useWatchFile: true});
     masterTail.on("line", function(data) {
+        if (logOutputCounter > 0) {
+            logOutputCounter--;
+            console.log(data);
+            message.channel.send(data);
+        }
         if (data.includes(SERVER_ONLINE_STRING)) {
             console.log(data);
             if (serverStartingUp) {
