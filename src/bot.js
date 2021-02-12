@@ -35,7 +35,7 @@ client.on('ready', () => {
 
     console.log(`${client.user.username} has logged in.`);
     const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
-    // mainChannel.send("I'm awake and ready to not starve!");
+    mainChannel.send("I'm awake and ready to not starve!");
 
 });
 
