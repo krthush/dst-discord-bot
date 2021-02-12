@@ -1,4 +1,10 @@
-require('dotenv').config(); // manage env vars
+// bot/dst servers only work for windows
+if (process.platform !== 'win32') {
+    throw new Error('Windows only');
+}
+
+// manage env vars
+require('dotenv').config();
 
 // constants
 const { Client } = require('discord.js'); // discord api
@@ -24,11 +30,6 @@ const SERVER_OFFLINE_STRING = "Shutting down";
 // vars
 var serverStartingUp = false;
 var serverShuttingDown = false;
-
-// bot/dst servers only work for windows
-if (process.platform !== 'win32') {
-    throw new Error('Windows only');
-}
 
 client.on('ready', () => {
 
