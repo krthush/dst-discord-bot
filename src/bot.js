@@ -20,6 +20,7 @@ const MAIN_CHANNEL_ID = process.env.MAIN_CHANNEL_ID;
 const MASTER_SERVER_LOG = process.env.MASTER_SERVER_LOG;
 const CAVES_SERVER_LOG = process.env.CAVES_SERVER_LOG;
 const CHAT_SERVER_LOG = process.env.CHAT_SERVER_LOG;
+const GENERAL_COMMAND_CHAT_OUPUT_LENGTH = process.env.GENERAL_COMMAND_CHAT_OUPUT_LENGTH;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
