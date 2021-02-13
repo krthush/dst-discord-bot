@@ -1,0 +1,1 @@
+ROBOCOPY "C:\Users\krthu\Documents\Klei\DoNotStarveTogether" "C:\Users\krthu\Documents\DST Backups\DoNotStarveTogether-%DATE:~-4%-%DATE:~4,2%-%DATE:~7,2%__%time:~0,2%-%time:~3,2%" /mir

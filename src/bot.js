@@ -22,6 +22,7 @@ const CAVES_SERVER_LOG = process.env.CAVES_SERVER_LOG;
 const CHAT_SERVER_LOG = process.env.CHAT_SERVER_LOG;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
+const BACKUP_SCRIPT = 'BackupDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
 const SERVER_ACTION_DELAY = 1000;
 const SERVER_ONLINE_STRING = "Registering master server";
@@ -95,6 +96,27 @@ client.on('message', (message) => {
                         }
                     } else {
                         message.channel.send("Server already offline.");
+                    }
+                });
+            }
+
+            // backup command
+            if (command === "backup") {
+                isDSTServerOnline().then((serverOnline) => {
+                    if (serverOnline) {
+                        console.log("Running back up scripts.");
+                        // use child process to run scripts
+                        runDSTServerCommand("master", "c_save()");
+                        setTimeout(function(){ runDSTServerCommand("caves", "c_save()"); }, SERVER_ACTION_DELAY);
+                        setTimeout(function(){
+                            // use child process to run .bat
+                            exec_file(BACKUP_SCRIPT, function(err, data) {
+                                if (err) console.log(err);
+                                message.channel.send("Backup batch script ran.");
+                            });
+                        }, SERVER_ACTION_DELAY);
+                    } else {
+                        message.channel.send("The server is shutdown.");
                     }
                 });
             }
