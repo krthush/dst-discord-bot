@@ -25,6 +25,7 @@ const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const BACKUP_SCRIPT = 'BackupDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
 const SERVER_ACTION_DELAY = 1000;
+const SERVER_SAVE_DELAY = 3000;
 const SERVER_ONLINE_STRING = "Registering master server";
 const SERVER_OFFLINE_STRING = "Shutting down";
 
@@ -104,10 +105,20 @@ client.on('message', (message) => {
             if (command === "backup") {
                 isDSTServerOnline().then((serverOnline) => {
                     if (serverOnline) {
-                        console.log("Running back up scripts.");
+                        console.log("Saving server first.");
                         // use child process to run scripts
                         runDSTServerCommand("master", "c_save()");
                         setTimeout(function(){ runDSTServerCommand("caves", "c_save()"); }, SERVER_ACTION_DELAY);
+                        console.log("Running back up script.");
+                        setTimeout(function(){
+                            // use child process to run .bat
+                            exec_file(BACKUP_SCRIPT, function(err, data) {
+                                if (err) console.log(err);
+                                message.channel.send("Server saved and backup batch script ran.");
+                            });
+                        }, SERVER_SAVE_DELAY);
+                    } else {
+                        console.log("Running back up script.");
                         setTimeout(function(){
                             // use child process to run .bat
                             exec_file(BACKUP_SCRIPT, function(err, data) {
@@ -115,8 +126,6 @@ client.on('message', (message) => {
                                 message.channel.send("Backup batch script ran.");
                             });
                         }, SERVER_ACTION_DELAY);
-                    } else {
-                        message.channel.send("The server is shutdown.");
                     }
                 });
             }
