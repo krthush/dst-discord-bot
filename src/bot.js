@@ -25,7 +25,7 @@ const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const BACKUP_SCRIPT = 'BackupDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
 const SERVER_ACTION_DELAY = 1000;
-const SERVER_SAVE_DELAY = 3000;
+const SERVER_SAVE_DELAY = 5000;
 const SERVER_ONLINE_STRING = "Registering master server";
 const SERVER_OFFLINE_STRING = "Shutting down";
 
@@ -114,7 +114,7 @@ client.on('message', (message) => {
                             // use child process to run .bat
                             exec_file(BACKUP_SCRIPT, function(err, data) {
                                 if (err) console.log(err);
-                                message.channel.send("Server saved and backup batch script ran.");
+                                message.channel.send("Server saved and backup batch script was run.");
                             });
                         }, SERVER_SAVE_DELAY);
                     } else {
@@ -123,7 +123,7 @@ client.on('message', (message) => {
                             // use child process to run .bat
                             exec_file(BACKUP_SCRIPT, function(err, data) {
                                 if (err) console.log(err);
-                                message.channel.send("Backup batch script ran.");
+                                message.channel.send("Backup batch script was run.");
                             });
                         }, SERVER_ACTION_DELAY);
                     }
