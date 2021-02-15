@@ -209,7 +209,7 @@ function setupLogTails(message) {
         console.log(data);
         // clean string
         var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
-        stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
+        // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
         stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
         // send message through bot
         console.log(stringEdit);
