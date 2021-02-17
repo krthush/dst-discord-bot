@@ -33,6 +33,7 @@ const SERVER_OFFLINE_STRING = "Shutting down";
 var serverStartingUp = false;
 var serverShuttingDown = false;
 var logOutputCounter = 0;
+var prevLogString = "";
 
 client.on('ready', () => {
 
@@ -207,14 +208,18 @@ function setupLogTails(message) {
     });
     chatTail.on("line", function(data) {
         console.log(data);
-        // clean string
-        var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
-        // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
-        stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
-        // send message through bot
-        console.log(stringEdit);
-        const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
-        mainChannel.send(stringEdit);
+        // prevent double sending
+        if (data != prevLogString) {
+            // clean string
+            var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
+            // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
+            stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
+            // send message through bot
+            console.log(stringEdit);
+            const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
+            mainChannel.send(stringEdit);
+        }
+        prevLogString = data;
     });
 }
 
