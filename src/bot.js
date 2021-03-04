@@ -204,13 +204,13 @@ function runDSTServerCommand(shard, command) {
     });
 }
 
-function watchLogTails {
+function watchLogTails() {
     masterTail.watch();
     cavesTail.watch();
     chatTail.watch();
 }
 
-function unwatchLogTails {
+function unwatchLogTails() {
     masterTail.unwatch();
     cavesTail.unwatch();
     chatTail.unwatch();
