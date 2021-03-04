@@ -41,7 +41,7 @@ var chatTail;
 
 client.login(process.env.DISCORDJS_BOT_TOKEN);
 
-setupLogTails(message);
+setupLogTails();
 
 client.on('ready', () => {
 
@@ -217,7 +217,7 @@ function unwatchLogTails() {
 }
 
 function setupLogTails(message) {
-    console.log("Tails added.");
+    const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
     masterTail = new Tail(MASTER_SERVER_LOG, {useWatchFile: true});
     cavesTail = new Tail(CAVES_SERVER_LOG, {useWatchFile: true});
     chatTail = new Tail(CHAT_SERVER_LOG, {useWatchFile: true});
@@ -225,14 +225,14 @@ function setupLogTails(message) {
         if (logOutputCounter > 0) {
             logOutputCounter--;
             console.log(data);
-            message.channel.send(data);
+            mainChannel.send(data);
         }
         if (data.includes(SERVER_ONLINE_STRING)) {
             console.log(data);
             if (serverStartingUp) {
                 serverStartingUp = false;
                 console.log("Server is now online.");
-                message.channel.send("Server is now online.");
+                mainChannel.send("Server is now online.");
             }
         }
         if (data.includes(SERVER_OFFLINE_STRING)) {
@@ -240,7 +240,7 @@ function setupLogTails(message) {
             if (serverShuttingDown) {
                 serverShuttingDown = false;
                 console.log("Server is now offline.");
-                message.channel.send("Server is now offline.");
+                mainChannel.send("Server is now offline.");
                 unwatchLogTails();
             }
         }
@@ -255,11 +255,11 @@ function setupLogTails(message) {
             stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
             // send message through bot
             console.log(stringEdit);
-            const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
             mainChannel.send(stringEdit);
         }
         prevLogString = data;
     });
+    console.log("Tails added.");
 }
 
 async function isDSTServerOnline() {
