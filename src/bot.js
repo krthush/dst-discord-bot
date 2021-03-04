@@ -23,6 +23,7 @@ const CHAT_SERVER_LOG = process.env.CHAT_SERVER_LOG;
 const AHK_SCRIPT = 'DSTServerInput.exe';
 const STARTUP_SCRIPT = 'StartDSTServer.bat';
 const BACKUP_SCRIPT = 'BackupDSTServer.bat';
+const RESTORE_SCRIPT = 'RestoreDSTServer.bat';
 const DST_SERVER_TASK_NAME = 'dontstarve_dedicated_server_nullrenderer.exe';
 const SERVER_ACTION_DELAY = 1000;
 const SERVER_SAVE_DELAY = 5000;
@@ -127,6 +128,62 @@ client.on('message', (message) => {
                                 message.channel.send("Backup batch script was run.");
                             });
                         }, SERVER_ACTION_DELAY);
+                    }
+                });
+            }
+
+            // restore command
+            if (command === "restore") {
+                isDSTServerOnline().then((serverOnline) => {
+                    if (serverOnline) {
+                        if (!serverShuttingDown) {
+                            serverShuttingDown = true;
+                            console.log("Shutting down DST server...");
+                            message.channel.send("Shutting down DST server...");
+                            // use child process to run .exe
+                            runDSTServerCommand("caves", "c_shutdown()");
+                            // shut master down after small delay
+                            setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
+                            // wait for server shutdown then run restore
+                            masterTail.on("line", function(data) {                                
+                                if (data.includes(SERVER_OFFLINE_STRING)) {
+                                    // unwatch file changes and run backup
+                                    masterTail.unwatch();
+                                    console.log("Running restore...");
+                                    message.channel.send("Running restore...");
+                                    // use child process to run .bat to get backup
+                                    exec_file(RESTORE_SCRIPT, function(err, data) {
+                                        if (err) console.log(err);
+                                        console.log("Restore complete.");    
+                                        message.channel.send("Restore complete.");
+                                        // start server
+                                        serverStartingUp = true;
+                                        console.log("Starting up DST server...");
+                                        message.channel.send("Starting up DST server...");
+                                        // use child process to run .bat
+                                        exec_file(STARTUP_SCRIPT, function(err, data) {
+                                            if (err) console.log(err);
+                                        });
+                                        setupLogTails(message);
+                                    });
+                                }
+                            });
+                        } else {
+                            message.channel.send("Attempting server shutdown already.");
+                        }
+                    } else {
+                        // unwatch file changes and run backup
+                        if (typeof masterTail !== 'undefined') {
+                            masterTail.unwatch();
+                        }
+                        console.log("Running restore...");
+                        message.channel.send("Running restore...");
+                        // use child process to run .bat to get backup
+                        exec_file(RESTORE_SCRIPT, function(err, data) {
+                            if (err) console.log(err);
+                            console.log("Restore complete.");    
+                            message.channel.send("Restore complete.");
+                        });
                     }
                 });
             }
