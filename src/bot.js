@@ -41,9 +41,9 @@ var chatTail;
 
 client.login(process.env.DISCORDJS_BOT_TOKEN);
 
-setupLogTails();
-
 client.on('ready', () => {
+
+    setupLogTails();
 
     console.log(`${client.user.username} has logged in.`);
     const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
@@ -73,13 +73,14 @@ client.on('message', (message) => {
                     serverStartingUp = true;
                     isDSTServerOnline().then((serverOnline) => {
                         if (!serverOnline) {
-                                console.log("Starting up DST server...");
-                                message.channel.send("Starting up DST server...");
-                                // use child process to run .bat
-                                exec_file(STARTUP_SCRIPT, function(err, data) {
-                                    if (err) console.log(err);
-                                });
-                                watchLogTails();
+                            console.log("Starting up DST server...");
+                            message.channel.send("Starting up DST server...");
+                            // use child process to run .bat
+                            exec_file(STARTUP_SCRIPT, function(err, data) {
+                                if (err) console.log(err);
+                            });
+                            watchLogTails();
+                            console.log("Watching tails.");
                         } else {
                             message.channel.send("Server already online.");
                             serverStartingUp = false;
@@ -242,6 +243,7 @@ function setupLogTails(message) {
                 console.log("Server is now offline.");
                 mainChannel.send("Server is now offline.");
                 unwatchLogTails();
+                console.log("Not watching tails.");
             }
         }
     });
