@@ -63,45 +63,47 @@ client.on('message', (message) => {
 
             // startup command
             if (command === "startup") {
-                isDSTServerOnline().then((serverOnline) => {
-                    if (!serverOnline) {
-                        if (!serverStartingUp) {
-                            serverStartingUp = true;
-                            console.log("Starting up DST server...");
-                            message.channel.send("Starting up DST server...");
-                            // use child process to run .bat
-                            exec_file(STARTUP_SCRIPT, function(err, data) {
-                                if (err) console.log(err);
-                            });
-                            setupLogTails(message);
+                if (!serverStartingUp) {
+                    serverStartingUp = true;
+                    isDSTServerOnline().then((serverOnline) => {
+                        if (!serverOnline) {
+                                console.log("Starting up DST server...");
+                                message.channel.send("Starting up DST server...");
+                                // use child process to run .bat
+                                exec_file(STARTUP_SCRIPT, function(err, data) {
+                                    if (err) console.log(err);
+                                });
+                                setupLogTails(message);
                         } else {
-                            message.channel.send("Attempting server startup already.");
+                            message.channel.send("Server already online.");
+                            serverStartingUp = false;
                         }
-                    } else {
-                        message.channel.send("Server already online.");
-                    }
-                });
+                    });
+                } else {
+                    message.channel.send("Attempting server startup already.");
+                }
             }
 
             // shutdown command
             if (command === "shutdown") {
-                isDSTServerOnline().then((serverOnline) => {
-                    if (serverOnline) {
-                        if (!serverShuttingDown) {
-                            serverShuttingDown = true;
-                            console.log("Shutting down DST server...");
-                            message.channel.send("Shutting down DST server...");
-                            // use child process to run .exe
-                            runDSTServerCommand("caves", "c_shutdown()");
-                            // shut master down after small delay
-                            setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
+                if (!serverShuttingDown) {
+                    serverShuttingDown = true;
+                    isDSTServerOnline().then((serverOnline) => {
+                        if (serverOnline) {
+                                console.log("Shutting down DST server...");
+                                message.channel.send("Shutting down DST server...");
+                                // use child process to run .exe
+                                runDSTServerCommand("caves", "c_shutdown()");
+                                // shut master down after small delay
+                                setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
                         } else {
-                            message.channel.send("Attempting server shutdown already.");
+                            message.channel.send("Server already offline.");
+                            serverShuttingDown = false;
                         }
-                    } else {
-                        message.channel.send("Server already offline.");
-                    }
-                });
+                    });
+                } else {
+                    message.channel.send("Attempting server shutdown already.");
+                }
             }
 
             // backup command
@@ -136,7 +138,7 @@ client.on('message', (message) => {
             // restore command
             if (command === "restore") {
                 isDSTServerOnline().then((serverOnline) => {
-                    if (serverOnline || serverShuttingDown) {
+                    if (serverOnline || serverShuttingDown || serverStartingUp) {
                         message.channel.send("Please shutdown server before restoration.");
                     } else {
                         runningRestoration = true;
