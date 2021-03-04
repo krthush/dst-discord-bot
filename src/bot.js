@@ -35,6 +35,7 @@ var serverStartingUp = false;
 var serverShuttingDown = false;
 var logOutputCounter = 0;
 var prevLogString = "";
+var runningRestoration = false;
 
 client.on('ready', () => {
 
@@ -135,52 +136,16 @@ client.on('message', (message) => {
             // restore command
             if (command === "restore") {
                 isDSTServerOnline().then((serverOnline) => {
-                    if (serverOnline) {
-                        if (!serverShuttingDown) {
-                            serverShuttingDown = true;
-                            console.log("Shutting down DST server...");
-                            message.channel.send("Shutting down DST server...");
-                            // use child process to run .exe
-                            runDSTServerCommand("caves", "c_shutdown()");
-                            // shut master down after small delay
-                            setTimeout(function(){ runDSTServerCommand("master", "c_shutdown()"); }, SERVER_ACTION_DELAY);
-                            // wait for server shutdown then run restore
-                            masterTail.on("line", function(data) {                                
-                                if (data.includes(SERVER_OFFLINE_STRING)) {
-                                    // unwatch file changes and run backup
-                                    masterTail.unwatch();
-                                    console.log("Running restore...");
-                                    message.channel.send("Running restore...");
-                                    // use child process to run .bat to get backup
-                                    exec_file(RESTORE_SCRIPT, function(err, data) {
-                                        if (err) console.log(err);
-                                        console.log("Restore complete.");    
-                                        message.channel.send("Restore complete.");
-                                        // start server
-                                        serverStartingUp = true;
-                                        console.log("Starting up DST server...");
-                                        message.channel.send("Starting up DST server...");
-                                        // use child process to run .bat
-                                        exec_file(STARTUP_SCRIPT, function(err, data) {
-                                            if (err) console.log(err);
-                                        });
-                                        setupLogTails(message);
-                                    });
-                                }
-                            });
-                        } else {
-                            message.channel.send("Attempting server shutdown already.");
-                        }
+                    if (serverOnline || serverShuttingDown) {
+                        message.channel.send("Please shutdown server before restoration.");
                     } else {
-                        // unwatch file changes and run backup
-                        if (typeof masterTail !== 'undefined') {
-                            masterTail.unwatch();
-                        }
+                        runningRestoration = true;
                         console.log("Running restore...");
                         message.channel.send("Running restore...");
                         // use child process to run .bat to get backup
                         exec_file(RESTORE_SCRIPT, function(err, data) {
                             if (err) console.log(err);
+                            runningRestoration = false;
                             console.log("Restore complete.");    
                             message.channel.send("Restore complete.");
                         });
@@ -264,19 +229,21 @@ function setupLogTails(message) {
         }
     });
     chatTail.on("line", function(data) {
-        console.log(data);
-        // prevent double sending
-        if (data != prevLogString) {
-            // clean string
-            var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
-            // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
-            stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
-            // send message through bot
-            console.log(stringEdit);
-            const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
-            mainChannel.send(stringEdit);
+        if (!runningRestoration) {
+            console.log(data);
+            // prevent double sending
+            if (data != prevLogString) {
+                // clean string
+                var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
+                // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
+                stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
+                // send message through bot
+                console.log(stringEdit);
+                const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
+                mainChannel.send(stringEdit);
+            }
+            prevLogString = data;
         }
-        prevLogString = data;
     });
 }
 
