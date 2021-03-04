@@ -35,7 +35,13 @@ var serverStartingUp = false;
 var serverShuttingDown = false;
 var logOutputCounter = 0;
 var prevLogString = "";
-var runningRestoration = false;
+var masterTail;
+var cavesTail;
+var chatTail;
+
+client.login(process.env.DISCORDJS_BOT_TOKEN);
+
+setupLogTails(message);
 
 client.on('ready', () => {
 
@@ -73,7 +79,7 @@ client.on('message', (message) => {
                                 exec_file(STARTUP_SCRIPT, function(err, data) {
                                     if (err) console.log(err);
                                 });
-                                setupLogTails(message);
+                                watchLogTails();
                         } else {
                             message.channel.send("Server already online.");
                             serverStartingUp = false;
@@ -141,13 +147,11 @@ client.on('message', (message) => {
                     if (serverOnline || serverShuttingDown || serverStartingUp) {
                         message.channel.send("Please shutdown server before restoration.");
                     } else {
-                        runningRestoration = true;
                         console.log("Running restore...");
                         message.channel.send("Running restore...");
                         // use child process to run .bat to get backup
                         exec_file(RESTORE_SCRIPT, function(err, data) {
                             if (err) console.log(err);
-                            runningRestoration = false;
                             console.log("Restore complete.");    
                             message.channel.send("Restore complete.");
                         });
@@ -193,8 +197,6 @@ client.on('message', (message) => {
     };
 });
 
-client.login(process.env.DISCORDJS_BOT_TOKEN);
-
 function runDSTServerCommand(shard, command) {
     // use child process to run .exe
     exec_file(AHK_SCRIPT, [shard, command], function(err, data) {
@@ -202,11 +204,23 @@ function runDSTServerCommand(shard, command) {
     });
 }
 
+function watchLogTails {
+    masterTail.watch();
+    cavesTail.watch();
+    chatTail.watch();
+}
+
+function unwatchLogTails {
+    masterTail.unwatch();
+    cavesTail.unwatch();
+    chatTail.unwatch();
+}
+
 function setupLogTails(message) {
     console.log("Tails added.");
-    var masterTail = new Tail(MASTER_SERVER_LOG, {useWatchFile: true});
-    var cavesTail = new Tail(CAVES_SERVER_LOG, {useWatchFile: true});
-    var chatTail = new Tail(CHAT_SERVER_LOG, {useWatchFile: true});
+    masterTail = new Tail(MASTER_SERVER_LOG, {useWatchFile: true});
+    cavesTail = new Tail(CAVES_SERVER_LOG, {useWatchFile: true});
+    chatTail = new Tail(CHAT_SERVER_LOG, {useWatchFile: true});
     masterTail.on("line", function(data) {
         if (logOutputCounter > 0) {
             logOutputCounter--;
@@ -227,25 +241,24 @@ function setupLogTails(message) {
                 serverShuttingDown = false;
                 console.log("Server is now offline.");
                 message.channel.send("Server is now offline.");
+                unwatchLogTails();
             }
         }
     });
     chatTail.on("line", function(data) {
-        if (!runningRestoration) {
-            console.log(data);
-            // prevent double sending
-            if (data != prevLogString) {
-                // clean string
-                var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
-                // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
-                stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
-                // send message through bot
-                console.log(stringEdit);
-                const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
-                mainChannel.send(stringEdit);
-            }
-            prevLogString = data;
+        console.log(data);
+        // prevent double sending
+        if (data != prevLogString) {
+            // clean string
+            var stringEdit = data.replace(/ *\[[^\]]*\]\: /,''); // remove first instance of sqaure brackets + text within
+            // stringEdit = stringEdit.replace(/ *\([^)]*\)/g,''); // remove parenthesis + text within
+            stringEdit = stringEdit.replace(/\[/,'[Server '); // add server identifier
+            // send message through bot
+            console.log(stringEdit);
+            const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
+            mainChannel.send(stringEdit);
         }
+        prevLogString = data;
     });
 }
 
