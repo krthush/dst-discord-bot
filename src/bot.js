@@ -29,6 +29,7 @@ const SERVER_ACTION_DELAY = 1000;
 const SERVER_SAVE_DELAY = 5000;
 const SERVER_ONLINE_STRING = "Registering master server";
 const SERVER_OFFLINE_STRING = "Shutting down";
+const MILLISECONDS_IN_HOUR = 3600000;
 
 // vars
 var serverStartingUp = false;
@@ -38,6 +39,7 @@ var prevLogString = "";
 var masterTail;
 var cavesTail;
 var chatTail;
+var lastBackUpTime = 0;
 
 client.login(process.env.DISCORDJS_BOT_TOKEN);
 
@@ -54,7 +56,7 @@ client.on('ready', () => {
 client.on('message', (message) => {
 
     // ignore bot messages
-    if (message.author.bot) return; 
+    if (message.author.bot) return;
 
     // check if admin
     if (message.member.roles.cache.some(r => r.name === ADMIN_ROLE)) {
@@ -66,6 +68,15 @@ client.on('message', (message) => {
                 .trim()
                 .substring(PREFIX.length)
                 .split(/\s+/);
+
+            // check if message in correct channel
+            if (command) {
+                const mainChannel = client.channels.cache.find(channel => channel.id === MAIN_CHANNEL_ID);
+                if (message.channel.id !== mainChannel.id) {
+                    message.channel.send("Please use dont-starve channel.");
+                    return;
+                };                
+            }
 
             // startup command
             if (command === "startup") {
@@ -115,6 +126,14 @@ client.on('message', (message) => {
 
             // backup command
             if (command === "backup") {
+                var d = new Date();
+                if (d.getTime() - lastBackUpTime > MILLISECONDS_IN_HOUR) {
+                    lastBackUpTime = d.getTime();
+                    message.channel.send("Running backup...");
+                } else {
+                    message.channel.send("You can only run the backup command once an hour.");
+                    return;
+                }
                 isDSTServerOnline().then((serverOnline) => {
                     if (serverOnline) {
                         console.log("Saving server first.");
